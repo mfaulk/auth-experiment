@@ -7,9 +7,6 @@
 // Set default node environment to development
 process.env.NODE_ENV = process.env.NODE_ENV || 'development';
 
-var Sequelize = require('sequelize');
-var sequelize = new Sequelize('postgres://mfaulk@localhost/xanadu');
-
 var express = require('express');
 var config = require('./config/environment');
 // Setup server
@@ -17,7 +14,9 @@ var app = express();
 var server = require('http').createServer(app);
 require('./config/express')(app);
 require('./routes')(app);
-
+var db = require('./models');
+console.log('== Sequelize Models ==');
+console.log(db.sequelize.models);
 
 
 
@@ -27,4 +26,4 @@ server.listen(config.port, config.ip, function () {
 });
 
 // Expose app
-exports = module.exports = app;
+var exports = module.exports = app;
