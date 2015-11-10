@@ -3,10 +3,10 @@
 angular.module('authWithNodeApp')
   .config(function ($stateProvider) {
     $stateProvider
-      .state('main', {
-        url: '/',
-        templateUrl: 'app/main/main.html',
-        controller: 'MainCtrl',
+      .state('register', {
+        url: '/register',
+        templateUrl: 'app/register/register.html',
+        controller: 'RegisterCtrl',
         controllerAs: 'vm'
       });
   });
