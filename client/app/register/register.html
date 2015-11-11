@@ -1,6 +1,7 @@
-<div class="register-block">
+<form class="register-block" ng-submit="vm.submit()">
     <h1>Register</h1>
-    <input type="text" value="" placeholder="Username" id="username"/>
-    <input type="password" value="" placeholder="Password" id="password"/>
+    <input type="text" ng-model="vm.username" placeholder="Username" id="username"/>
+    <input type="password" ng-model="vm.password" placeholder="Password" id="password"/>
+    <!-- See https://github.com/angular/angular.js/issues/6017 for discussion of exactly what creates a submit event.-->
     <button>Submit</button>
-</div>
+</form>

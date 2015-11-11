@@ -1,10 +1,10 @@
-<div class="login-block">
+<form class="login-block" ng-submit="vm.submit()">
     <h1>Login</h1>
-    <input type="text" value="" placeholder="Username" id="username"/>
-    <input type="password" value="" placeholder="Password" id="password"/>
+    <input type="text" ng-model="vm.username" placeholder="Username" id="username"/>
+    <input type="password" ng-model="vm.password" placeholder="Password" id="password"/>
     <button>Submit</button>
     <a class="u-pull-right" ui-sref="register">Register</a>
     <div class="u-cf"></div>
-</div>
+</form>
 
 
