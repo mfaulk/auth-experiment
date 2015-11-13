@@ -17,6 +17,14 @@ body {
   background: url('../assets/images/escheresque_ste.png') repeat;
 }
 
+a {
+  text-decoration: none;
+  font-size: 16px;
+  color: steelblue;
+  -webkit-transition: all ease .3s;
+          transition: all ease .3s;
+}
+
 /**
 * App-wide Colors
 */

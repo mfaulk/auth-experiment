@@ -34,4 +34,13 @@ Object.keys(db).forEach(function(modelName) {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
+//console.log(db.sequelize.models.User);
+//db.sequelize.models.User.create({
+//  username: 'admin',
+//  password: 'admin'
+//}).then(function(adminUser) {
+//  console.log('Created admin user');
+//  console.log(adminUser);
+//});
+
 module.exports = db;
