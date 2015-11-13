@@ -11,8 +11,6 @@ module.exports = function (app, passport) {
 
   // Insert routes below
 
-  // TODO: sign up
-
   // See http://stackoverflow.com/questions/15711127/express-passport-node-js-error-handling
 
   app.get('/api/loggedin', function(req, res){
@@ -20,6 +18,8 @@ module.exports = function (app, passport) {
   });
 
   app.post('/api/login', passport.authenticate('local'), function(req, res){
+    console.log('login succeeded.');
+    console.log(req.user);
     res.send(req.user);
   });
 

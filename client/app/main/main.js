@@ -7,6 +7,11 @@ angular.module('authWithNodeApp')
         url: '/',
         templateUrl: 'app/main/main.html',
         controller: 'MainCtrl',
-        controllerAs: 'vm'
+        controllerAs: 'vm',
+        resolve: {
+          authenticated: function(authService) {
+            return authService.isAuthenticated();
+          }
+        }
       });
   });

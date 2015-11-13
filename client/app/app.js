@@ -13,7 +13,7 @@ angular.module('authWithNodeApp', [
 
     $locationProvider.html5Mode(true);
 
-    $httpProvider.interceptors.push('apiInterceptor');
+    //$httpProvider.interceptors.push('apiInterceptor');
   })
   // $broadcast events
   .constant('EVENTS', {
