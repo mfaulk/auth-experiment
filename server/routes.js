@@ -15,6 +15,10 @@ module.exports = function (app, passport) {
 
   // See http://stackoverflow.com/questions/15711127/express-passport-node-js-error-handling
 
+  app.get('/api/loggedin', function(req, res){
+    res.send(req.isAuthenticated() ? req.user : '0');
+  });
+
   app.post('/api/login', passport.authenticate('local'), function(req, res){
     res.send(req.user);
   });
