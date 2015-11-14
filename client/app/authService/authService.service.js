@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('authWithNodeApp')
-  .factory('authService', function ($http, $q, $state) {
+  .factory('authService', ['$http', '$q', '$state', function ($http, $q, $state) {
 
     return {
       isAuthenticated: function(){
@@ -21,4 +21,4 @@ angular.module('authWithNodeApp')
         return deferred.promise;
       }
     };
-  });
+  }]);

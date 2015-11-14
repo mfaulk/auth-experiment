@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('authWithNodeApp')
-  .config(function ($stateProvider) {
+  .config(['$stateProvider',function ($stateProvider) {
     $stateProvider
       .state('main', {
         url: '/',
@@ -14,4 +14,4 @@ angular.module('authWithNodeApp')
           }
         }
       });
-  });
+  }]);

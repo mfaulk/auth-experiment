@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('authWithNodeApp')
-  .factory('userService', function (store) {
+  .factory('userService', ['store', function (store) {
     var currentUser = null;
 
     function setCurrentUser(user) {
@@ -11,7 +11,7 @@ angular.module('authWithNodeApp')
     }
 
     function getCurrentUser() {
-      if(!currentUser) {
+      if (!currentUser) {
         currentUser = store.get('user');
       }
       return currentUser;
@@ -22,4 +22,4 @@ angular.module('authWithNodeApp')
       getCurrentUser: getCurrentUser,
       setCurrentUser: setCurrentUser
     };
-  });
+  }]);
