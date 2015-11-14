@@ -5,6 +5,7 @@ describe('Service: authService', function () {
   // load the service's module
   beforeEach(module('authWithNodeApp'));
 
+
   // instantiate service
   var authService;
   beforeEach(inject(function (_authService_) {

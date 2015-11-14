@@ -11,8 +11,8 @@ describe('Service: userService', function () {
     userService = _userService_;
   }));
 
-  it('should do something', function () {
-    expect(!!userService).toBe(true);
-  });
+  //it('should do something', function () {
+  //  expect(!!userService).toBe(true);
+  //});
 
 });

@@ -7,7 +7,7 @@
 var errors = require('./components/errors');
 var path = require('path');
 
-module.exports = function (app, passport) {
+module.exports = function (app, passport, authorization) {
 
   // Insert routes below
 

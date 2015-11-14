@@ -22,7 +22,7 @@ var db = require('./models');
 //});
 
 
-// auth ======================================================================
+// authentication =============================================================
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
@@ -34,8 +34,11 @@ require('./config/passport')(passport, db);
 app.use(passport.initialize());
 app.use(passport.session()); // for persistent login sessions
 
+// authorization ==============================================================
+var authorization = require('express-authorization');
+
 // routes =====================================================================
-require('./routes')(app, passport);
+require('./routes')(app, passport, authorization);
 
 
 // launch =====================================================================
