@@ -13,16 +13,13 @@ var app = express();
 var server = require('http').createServer(app);
 require('./config/express')(app);
 
-
 // database ===================================================================
 var db = require('./models');
 //console.log(db.sequelize.models.User);
-//db.sequelize.sync().then(function () {
-//  console.log('sunk');
-//});
-
 
 // authentication =============================================================
+var permittivity = require('./components/permittivity')(db);
+
 var cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
@@ -35,11 +32,18 @@ app.use(passport.initialize());
 app.use(passport.session()); // for persistent login sessions
 
 // authorization ==============================================================
-var authorization = require('express-authorization');
+var authorizer = require('express-authorize');
+// Initialize authorizer with default options
+authorizer.options = {
+  /*
+  withSubject     : withSubject,
+  withPermissions : withPermissions,
+  onDenied        : onDenied
+  */
+};
 
 // routes =====================================================================
-require('./routes')(app, passport, authorization);
-
+require('./routes')(app, passport, authorizer, permittivity);
 
 // launch =====================================================================
 server.listen(config.port, config.ip, function () {
@@ -47,4 +51,4 @@ server.listen(config.port, config.ip, function () {
 });
 
 // Expose app
-// var exports = module.exports = app;
+module.exports = app;

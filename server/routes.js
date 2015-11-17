@@ -7,13 +7,13 @@
 var errors = require('./components/errors');
 var path = require('path');
 
-module.exports = function (app, passport, authorization) {
+module.exports = function (app, passport, authorizer, permittivity) {
 
   app.get('/api/loggedin', function (req, res) {
     res.send(req.isAuthenticated() ? req.user : '0');
   });
 
-  app.post('/api/login', passport.authenticate('local'), setPermissions, function (req, res) {
+  app.post('/api/login', passport.authenticate('local'), permittivity.setPermissions, function (req, res) {
     res.send(req.user);
   });
 
@@ -24,9 +24,9 @@ module.exports = function (app, passport, authorization) {
 
   app.use('/api/thingsWithAuthentication', isAuthenticated, require('./api/thing'));
 
-  app.use('/api/restricted', isAuthenticated, authorization.ensureRequest.isPermitted("restricted:view"), require('./api/thing'));
+  app.use('/api/restricted', isAuthenticated, authorizer.isPermitted("restricted:view"), require('./api/thing'));
 
-  app.get('/api/forbidden', isAuthenticated, authorization.ensureRequest.isPermitted("forbidden"), function(req, res) {
+  app.get('/api/forbidden', isAuthenticated, authorizer.isPermitted("forbidden:view"), function(req, res) {
     res.send('verboten!');
   });
 
@@ -41,29 +41,12 @@ module.exports = function (app, passport, authorization) {
     });
 };
 
-// route middleware to make sure a user is logged in.
+
 function isAuthenticated(req, res, next) {
-  // isAuthenticated in defined in passport's request.js, https://github.com/jaredhanson/passport/blob/master/lib/http/request.js
+  // isAuthenticated in defined in https://github.com/jaredhanson/passport/blob/master/lib/http/request.js
   if (req.isAuthenticated()) {
     return next();
   }
-  // See http://stackoverflow.com/questions/3297048/403-forbidden-vs-401-unauthorized-http-responses
-  // for the differences between 401 Unauthorized and 403 Forbidden
   errors[401](req, res);
 }
 
-/**
- * Reads permissions set by passportjs, and writes them to req.session.user.permissions, as expected by express-authorization
- * @param req
- * @param res
- * @param next
- */
-function setPermissions(req, res, next) {
-  if (req.session.passport.user !== '0') {
-    console.log('found passport session state');
-    req.session.user = req.session.user || {};
-    req.session.user.permissions = ["restricted:*"];
-  }
-  console.log(req.session);
-  next();
-}

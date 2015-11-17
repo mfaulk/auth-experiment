@@ -58,5 +58,4 @@ module.exports = function (passport, db) {
 
   // This strategy has a default name of 'local'
   passport.use(new LocalStrategy(options, verify));
-
 };

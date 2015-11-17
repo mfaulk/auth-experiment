@@ -11,7 +11,6 @@
     "ejs": "~0.8.4",
     "errorhandler": "~1.0.0",
     "express": "~4.9.0",
-    "express-authorization": "^1.0.0",
     "express-authorize": "^1.2.0",
     "express-session": "^1.0.4",
     "lodash": "~2.4.1",
