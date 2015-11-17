@@ -9,17 +9,11 @@ var path = require('path');
 
 module.exports = function (app, passport, authorization) {
 
-  // Insert routes below
-
-  // See http://stackoverflow.com/questions/15711127/express-passport-node-js-error-handling
-
-  app.get('/api/loggedin', function(req, res){
+  app.get('/api/loggedin', function (req, res) {
     res.send(req.isAuthenticated() ? req.user : '0');
   });
 
-  app.post('/api/login', passport.authenticate('local'), function(req, res){
-    console.log('login succeeded.');
-    console.log(req.user);
+  app.post('/api/login', passport.authenticate('local'), setPermissions, function (req, res) {
     res.send(req.user);
   });
 
@@ -28,7 +22,13 @@ module.exports = function (app, passport, authorization) {
     res.send(200);
   });
 
-  app.use('/api/things', isAuthenticated, require('./api/thing')); // sample "private" route
+  app.use('/api/thingsWithAuthentication', isAuthenticated, require('./api/thing'));
+
+  app.use('/api/restricted', isAuthenticated, authorization.ensureRequest.isPermitted("restricted:view"), require('./api/thing'));
+
+  app.get('/api/forbidden', isAuthenticated, authorization.ensureRequest.isPermitted("forbidden"), function(req, res) {
+    res.send('verboten!');
+  });
 
   // All undefined asset or api routes should return a 404
   app.route('/:url(api|auth|components|app|bower_components|assets)/*')
@@ -50,4 +50,20 @@ function isAuthenticated(req, res, next) {
   // See http://stackoverflow.com/questions/3297048/403-forbidden-vs-401-unauthorized-http-responses
   // for the differences between 401 Unauthorized and 403 Forbidden
   errors[401](req, res);
+}
+
+/**
+ * Reads permissions set by passportjs, and writes them to req.session.user.permissions, as expected by express-authorization
+ * @param req
+ * @param res
+ * @param next
+ */
+function setPermissions(req, res, next) {
+  if (req.session.passport.user !== '0') {
+    console.log('found passport session state');
+    req.session.user = req.session.user || {};
+    req.session.user.permissions = ["restricted:*"];
+  }
+  console.log(req.session);
+  next();
 }
