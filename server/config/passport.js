@@ -3,8 +3,7 @@
 var LocalStrategy = require('passport-local').Strategy;
 
 module.exports = function (passport, db) {
-  console.log('Configuring Passport');
-  console.log(db.User);
+  //console.log(db.User);
 
   // Sessions =================================================================
   //
@@ -12,12 +11,12 @@ module.exports = function (passport, db) {
   // must be serialized to the session, and deserialized when subsequent requests are made.
 
   passport.serializeUser(function (user, done) {
-    console.log('serializeUser: ', user.id);
+    //console.log('serializeUser: ', user.id);
     done(null, user.id);
   });
 
   passport.deserializeUser(function (id, done) {
-    console.log('deserializeUser: ', id);
+    //console.log('deserializeUser: ', id);
     db.User.find({where: {id: id}}).then(function (user) {
       done(null, user);
     }).error(function (err) {
@@ -39,7 +38,7 @@ module.exports = function (passport, db) {
     db.User.findOne({where: {username: username}}).then(function (user) {
       if (!user) {
         done(null, false, {message: 'Unknown user'});
-      } else if (password != user.password) {
+      } else if (password !== user.password) {
         done(null, false, {message: 'LocalStrategy: Invalid password'});
       } else {
         done(null, user);

@@ -6,8 +6,11 @@
 
 var errors = require('./components/errors');
 var path = require('path');
+var _ = require('lodash');
 
 module.exports = function (app, passport, authorizer, permittivity) {
+
+  var ENDPOINT = '/api';
 
   app.get('/api/loggedin', function (req, res) {
     res.send(req.isAuthenticated() ? req.user : '0');

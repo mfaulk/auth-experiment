@@ -9,11 +9,13 @@
     "port": "5432"
   },
   "test": {
-    "username": "root",
+    "username": "mfaulk",
     "password": null,
     "database": "database_test",
+    "dialect": "postgres",
+    "protocol": "postgres",
     "host": "127.0.0.1",
-    "dialect": "postgres"
+    "port": "5432"
   },
   "production": {
     "username": "root",
