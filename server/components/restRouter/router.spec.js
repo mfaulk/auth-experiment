@@ -178,8 +178,6 @@ describe('router GET /api/user where firstname is Patrick', function () {
   });
 });
 
-// TODO: attempt to GET a non-existant model
-
 describe('router GET /api/notamodel', function () {
   it('should give an error status.', function (done) {
     var request = httpMocks.createRequest({
@@ -212,8 +210,6 @@ describe('router HEAD /api/user', function () {
     router.handleRequest(request, callback);
   });
 });
-
-// TODO: POST
 
 describe('router POST /api/user', function () {
   it('should return created user.', function () {

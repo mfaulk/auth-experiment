@@ -446,7 +446,7 @@ var handleResourceDescribe = function (modelName, callback) {
  * @param attributes
  * @param callback
  */
-var handleResourceCreate = function(modelName, attributes, callback) {
+var handleResourceCreate = function (modelName, attributes, callback) {
   console.log('modelName: ', modelName);
   console.log('attributes: ', attributes);
 
@@ -458,15 +458,15 @@ var handleResourceCreate = function(modelName, attributes, callback) {
     var that = this;
     model
       .create(attributes)
-      .then(function(entry) {
-        if (!entry){
+      .then(function (entry) {
+        if (!entry) {
           console.log('no entry?');
           that.handleSuccess({}, callback)
-        }else{
+        } else {
           that.handleSuccess(entry.dataValues, callback)
         }
       })
-      .error(function(err) {
+      .error(function (err) {
         that.handleError(err, callback)
       })
   } else {
@@ -486,14 +486,50 @@ var handleResourceShow = function (modelName, identifier, callback) {
   if (!model) {
     this.handleError("Unknown Model: " + modelName, callback)
   } else {
-    model.find({where: {id: identifier}}).then(function (item) {
-      if(!!item) {
-        that.handleSuccess(item.dataValues, callback);
-      } else {
-        that.handleError('Invalid ID', callback);
-      }
-    }).error(function (err) {
-      that.handleError(err,  callback);
-    });
+    model
+      .find({where: {id: identifier}})
+      .then(function (item) {
+        if (!!item) {
+          that.handleSuccess(item.dataValues, callback);
+        } else {
+          that.handleError('Invalid ID', callback);
+        }
+      }).error(function (err) {
+        that.handleError(err, callback);
+      });
+  }
+};
+
+/**
+ * Handle PUT /api/model/id
+ * @param modelName
+ * @param identifier
+ * @param attributes
+ * @param callback
+ */
+var handleResourceUpdate = function (modelName, identifier, attributes, callback) {
+  var model = getModel(modelName, this.db);
+  if (!model) {
+    this.handleError("Unknown Model: " + modelName, callback)
+  } else {
+    var that = this;
+    model
+      .find({where: {id: identifier}})
+      .success(function (entry) {
+        if (!entry) {
+          that.handleError("This object doesn't exists", callback);
+        } else {
+          entry.updateAttributes(attributes).complete(function (err, entry) {
+            if (err) {
+              that.handleError(err, callback);
+            } else {
+              that.handleSuccess(entry.dataValues, callback);
+            }
+          })
+        }
+      })
+      .error(function (err) {
+        that.handleError(err, callback);
+      });
   }
 };
