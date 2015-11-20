@@ -214,40 +214,6 @@ Router.prototype.handleSuccess = function (data, optionsOrCallback, callback) {
   }
 };
 
-//Router.prototype.findAssociation = function (daoFactory, associatedModelName) {
-//  for (var key in  daoFactory.associations) {
-//    var hasAssociationAccessor = (daoFactory.associations[key].associationAccessor === associatedModelName);
-//    var hasTargetTableName = (daoFactory.associations[key].target.tableName === associatedModelName);
-//
-//    if (hasAssociationAccessor || hasTargetTableName) {
-//      return daoFactory.associations[key];
-//    }
-//  }
-//  return null;
-//};
-//
-//Router.prototype.findSingleAssociatedModel = function (modelName, identifier, associatedModelName, callback) {
-//  var daoFactory = this.findDAOFactory(modelName);
-//  var association = !!daoFactory ? this.findAssociation(daoFactory, associatedModelName) : null;
-//
-//  if (association.associationType !== 'BelongsTo') {
-//    association = null;
-//  }
-//
-//  if (!!association) {
-//    daoFactory.find(identifier).done(function (err, dao) {
-//      if (err) {
-//        callback(err, null);
-//      } else {
-//        dao[association.accessors.get]().success(function (associatedModel) {
-//          callback(null, associatedModel);
-//        })
-//      }
-//    })
-//  } else {
-//    callback(new Error('Unable to find ' + modelName + ' with identifier ' + identifier), null);
-//  }
-//};
 
 /**
  *
@@ -515,18 +481,45 @@ var handleResourceUpdate = function (modelName, identifier, attributes, callback
     var that = this;
     model
       .find({where: {id: identifier}})
-      .success(function (entry) {
+      .then(function (entry) {
         if (!entry) {
           that.handleError("This object doesn't exists", callback);
         } else {
-          entry.updateAttributes(attributes).complete(function (err, entry) {
-            if (err) {
+          var options = {
+            fields: _.keys(attributes)
+          };
+          console.log(options);
+          entry.update(attributes, options)
+            .then(function (updatedEntry) {
+              that.handleSuccess(updatedEntry.dataValues, callback);
+            })
+            .error(function (err) {
               that.handleError(err, callback);
-            } else {
-              that.handleSuccess(entry.dataValues, callback);
-            }
-          })
+            });
         }
+      })
+      .error(function (err) {
+        that.handleError(err, callback);
+      });
+  }
+};
+
+/**
+ * Handle DELETE /api/model/id
+ * @param modelName
+ * @param identifier
+ * @param callback
+ */
+var handleResourceDelete = function (modelName, identifier, callback) {
+  var model = getModel(modelName, this.db);
+  if (!model) {
+    this.handleError("Unknown Model: " + modelName, callback)
+  } else {
+    var that = this;
+    model
+      .destroy({where: {id: identifier}})
+      .then(function () {
+        that.handleSuccess(identifier, callback);
       })
       .error(function (err) {
         that.handleError(err, callback);

@@ -24,7 +24,7 @@ var sequelize, router;
 
 // Before =====================================================================
 
-before(function (done) {
+beforeEach(function (done) {
   // Creating a mock DB can take time. Extend mocha's timeout.
   this.timeout(15000);
   mockDB.getSequelize().then(function (_sequelize) {
@@ -32,6 +32,7 @@ before(function (done) {
     var db = {
       sequelize: _sequelize
     };
+    sequelize = _sequelize;
     _.extend(db, _sequelize.models);
     router = new Router(db, options);
     done();
@@ -84,13 +85,14 @@ describe('splitPath on /api/foo/1234/bar/0987', function () {
 // handleRequest ==============================================================
 
 describe('router', function () {
-  it('should error if request is not below the endpoint.', function () {
+  it('should error if request is not below the endpoint.', function (done) {
     var request = httpMocks.createRequest({
       method: 'GET',
       url: '/thisisnottheapi'
     });
     var callback = function (obj) {
       assert.equal(obj.status, 'error');
+      done();
     };
     router.handleRequest(request, callback);
   });
@@ -98,7 +100,7 @@ describe('router', function () {
 
 
 describe('router GET /api', function () {
-  it('should list models.', function () {
+  it('should list models.', function (done) {
     var request = httpMocks.createRequest({
       method: 'GET',
       url: '/api'
@@ -112,6 +114,7 @@ describe('router GET /api', function () {
         models.push(data[i].name);
       }
       assert(_.includes(models, 'User'));
+      done();
     };
 
     router.handleRequest(request, callback);
@@ -196,7 +199,7 @@ describe('router GET /api/notamodel', function () {
 });
 
 describe('router HEAD /api/user', function () {
-  it('should..?', function () {
+  it('should..?', function (done) {
     var request = httpMocks.createRequest({
       method: 'HEAD',
       url: '/api/user'
@@ -205,6 +208,7 @@ describe('router HEAD /api/user', function () {
     var callback = function (obj) {
       var data = obj.data;
       var status = obj.status;
+      done();
     };
 
     router.handleRequest(request, callback);
@@ -212,7 +216,7 @@ describe('router HEAD /api/user', function () {
 });
 
 describe('router POST /api/user', function () {
-  it('should return created user.', function () {
+  it('should return created user.', function (done) {
     var request = httpMocks.createRequest({
       method: 'POST',
       url: '/api/user',
@@ -228,6 +232,7 @@ describe('router POST /api/user', function () {
       assert.equal(data.firstName, 'Calvin');
       assert.equal(data.lastName, 'Broadus');
       assert.equal(obj.status, 'success');
+      done();
     };
 
     router.handleRequest(request, callback);
@@ -261,8 +266,6 @@ describe('router GET /api/user/id with invalid id', function () {
     var request = httpMocks.createRequest({
       method: 'GET',
       url: '/api/user/2908234098230948',
-      params: {},
-      query: {}
     });
     var callback = function (obj) {
       var user = obj.data;
@@ -273,6 +276,47 @@ describe('router GET /api/user/id with invalid id', function () {
   });
 });
 
+describe('router PUT /api/user/3', function () {
+  it('should return JSON for updated user.', function (done) {
+    var request = httpMocks.createRequest({
+      method: 'PUT',
+      url: '/api/user/3',
+      body: {
+        firstName: 'Snoop',
+        lastName: 'Dee-oh-double-gizzle'
+      }
+    });
+    var callback = function (obj) {
+      var user = obj.data;
+      assert.equal(obj.status, 'success');
+      assert.equal(user.id, 3);
+      assert.equal(user.firstName, 'Snoop');
+      assert.equal(user.lastName, 'Dee-oh-double-gizzle');
+      done();
+    };
+    router.handleRequest(request, callback);
+  });
+});
+
+describe('router DELETE /api/user/2', function () {
+  it('should delete user 2.', function (done) {
+    var request = httpMocks.createRequest({
+      method: 'DELETE',
+      url: '/api/user/2'
+    });
+    var callback = function (obj) {
+      var user = obj.data;
+      assert.equal(obj.status, 'success');
+
+      sequelize.models.User.count().then(function(c){
+        assert.equal(c, 4);
+        done();
+      });
+
+    };
+    router.handleRequest(request, callback);
+  });
+});
 
 //
 //describe('router POST /api/user', function () {

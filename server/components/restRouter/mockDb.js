@@ -70,12 +70,13 @@ function defineUser(sequelize) {
       },
     firstName: {
       type: Sequelize.STRING,
-      allowNull: false
-      //field: 'first_name' // Will result in an attribute that is firstName when user facing but first_name in the database
+      allowNull: false,
+      field: 'first_name' // Will result in an attribute that is firstName when user facing but first_name in the database
     },
     lastName: {
       type: Sequelize.STRING,
-      allowNull: false
+      allowNull: false,
+      field: 'last_name'
     }
   }, {
     timestamps: false,
