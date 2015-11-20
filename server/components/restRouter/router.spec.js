@@ -321,28 +321,22 @@ describe('router DELETE /api/user/2', function () {
   });
 });
 
-//
-//describe('router POST /api/user', function () {
-//  it('should...', function () {
-//    var request = httpMocks.createRequest({
-//      method: 'POST',
-//      url: '/api/user'
-//    });
-//
-//    var callback = function (obj) {
-//      //.log(obj);
-//      var data = obj.data;
-//      var status = obj.status;
-//
-//      //var models = [];
-//      //for (var i = 0; i < data.length; i++) {
-//      //  models.push(data[i].name);
-//      //}
-//      //assert.equal(status, 'success');
-//      //assert(_.includes(models, 'User'));
-//    };
-//
-//    router.handleRequest(request, callback);
-//  });
-//});
-
+// /api/user/id/company
+describe('router GET /api/user/2/company', function () {
+  it('should return company for user 2', function (done) {
+    var request = httpMocks.createRequest({
+      method: 'GET',
+      url: '/api/user/2/company',
+      params: {},
+      query: {}
+    });
+    var callback = function (obj) {
+      var company = obj.data;
+      assert.equal(obj.status, 'success');
+      assert.equal(company.name, 'Universal Exports');
+      assert.equal(company.isEvilShellCorp, false);
+      done();
+    };
+    router.handleRequest(request, callback);
+  });
+});

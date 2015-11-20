@@ -9,6 +9,12 @@ var _ = require('lodash');
 var querystring = require('querystring');
 var url = require('url');
 
+// Sequelize association types
+var BELONGS_TO = 'BelongsTo';
+var BELONGS_TO_MANY = 'BelongsToMany';
+var HAS_MANY = 'HasMany';
+var HAS_ONE = 'HasOne';
+
 var Router = module.exports = function (db, options) {
   this.db = db;
   this.sequelize = db.sequelize;
@@ -19,8 +25,6 @@ var Router = module.exports = function (db, options) {
     allowed: []
   }, options || {})
 };
-
-//Router.prototype.log = ...
 
 Router.prototype.isRestfulRequest = function (path) {
   return path.indexOf(this.options.endpoint) === 0
@@ -161,7 +165,7 @@ Router.prototype.handleRequest = function (req, callback) {
       break;
 
     /*
-     * requested path: /api/dao_factory/1/associated_dao_factory/1
+     * requested path: /api/model_name/1/associated_model_name/1
      */
     case 4:
       if (isNaN(parseInt(identifier)) || isNaN(parseInt(associatedIdentifier)) || !this.isAllowed(modelName) || !this.isAllowed(associatedModelName)) {
@@ -238,6 +242,9 @@ Router.prototype.isAllowed = function (modelName) {
 
 /**
  *
+ * @param modelName
+ * @param db
+ * @returns {*}
  */
 var getModel = function (modelName, db) {
   //console.log(db.models);
@@ -250,6 +257,21 @@ var getModel = function (modelName, db) {
   for (var i = 0; i < modelNames.length; i++) {
     if (modelNames[i].toLowerCase() === modelName.toLowerCase()) {
       return db.sequelize.models[modelNames[i]];
+    }
+  }
+  return new Error();
+};
+
+/**
+ *
+ * @param model
+ * @param associationName
+ */
+var getAssociation = function (model, associationName) {
+  var associations = model.associations;
+  for (var key in associations) {
+    if (key.toLowerCase() === associationName.toLowerCase()) {
+      return associations[key];
     }
   }
   return new Error();
@@ -513,13 +535,46 @@ var handleResourceUpdate = function (modelName, identifier, attributes, callback
 var handleResourceDelete = function (modelName, identifier, callback) {
   var model = getModel(modelName, this.db);
   if (!model) {
-    this.handleError("Unknown Model: " + modelName, callback)
+    this.handleError("Unknown Model: " + modelName, callback);
   } else {
     var that = this;
     model
       .destroy({where: {id: identifier}})
       .then(function () {
         that.handleSuccess(identifier, callback);
+      })
+      .error(function (err) {
+        that.handleError(err, callback);
+      });
+  }
+};
+
+// handleResourceIndexAssociation
+
+/**
+ * handle GET /api/model/id/associatedModel
+ * @param modelName
+ * @param identifier
+ * @param associatedModelName
+ * @param callback
+ */
+var handleResourceIndexAssociation = function (modelName, identifier, associatedModelName, callback) {
+  var model = getModel(modelName, this.db);
+  var associatedModel = getAssociation(model, associatedModelName);
+  var associatedAccessor = associatedModel.accessors['get'];
+
+  var that = this;
+  if (!model) {
+    that.handleError("Unknown Model: " + modelName, callback)
+  } else {
+    model
+      .findById(identifier)
+      .then(function (entry) {
+        entry[associatedAccessor]().then(function (assoc) {
+          that.handleSuccess(assoc.dataValues, callback);
+        }).error(function (err) {
+          console.log(err);
+        });
       })
       .error(function (err) {
         that.handleError(err, callback);

@@ -20,34 +20,63 @@ function getInMemorySequelize() {
 
   // Define models
   var User = defineUser(sequelize);
+  var Company = defineCompany(sequelize);
+  User.belongsTo(Company);
 
   // Sync, and populate testing DB
   sequelize.sync({force: true}).then(function () {
 
+    var universalExports, virtucon;
+
+    Company.create({
+      name: 'Universal Exports',
+      isEvilShellCorp: false
+    }).then(function (instance) {
+      universalExports = instance;
+    });
+
+    Company.create({
+      name: 'Virtucon Industries',
+      isEvilShellCorp: true
+    }).then(function (instance) {
+      virtucon = instance;
+    });
+
     User.create({
       firstName: 'Svetlana',
       lastName: 'Alexievich'
+    }).then(function (instance) {
+      instance.setCompany(virtucon);
     });
 
     User.create({
       firstName: 'Patrick',
       lastName: 'Modiano'
+    }).then(function (instance) {
+      instance.setCompany(universalExports);
     });
 
     User.create({
       firstName: 'Alice',
       lastName: 'Munro'
+    }).then(function (instance) {
+      instance.setCompany(virtucon);
     });
 
     User.create({
       firstName: 'Mo',
       lastName: 'Yan'
+    }).then(function (instance) {
+      instance.setCompany(virtucon);
     });
 
     User.create({
       firstName: 'Tomas',
-      lastName: 'Transtromer' //robots in disguise
+      lastName: 'Transtromer'
+    }).then(function (instance) {
+      instance.setCompany(universalExports);
     });
+
     return deferred.resolve(sequelize);
   });
 
@@ -63,11 +92,11 @@ module.exports = {
 function defineUser(sequelize) {
   return sequelize.define('User', {
     id: {
-        allowNull: false,
-        autoIncrement: true,
-        primaryKey: true,
-        type: Sequelize.INTEGER
-      },
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: Sequelize.INTEGER
+    },
     firstName: {
       type: Sequelize.STRING,
       allowNull: false,
@@ -84,10 +113,26 @@ function defineUser(sequelize) {
   });
 }
 
-//User.sync({force: true}).then(function () {
-//  // Table created
-//  return User.create({
-//    firstName: 'John',
-//    lastName: 'Hancock'
-//  });
-//});
+function defineCompany(sequelize) {
+  return sequelize.define('Company', {
+    id: {
+      allowNull: false,
+      autoIncrement: true,
+      primaryKey: true,
+      type: Sequelize.INTEGER
+    },
+    name: {
+      type: Sequelize.STRING,
+      allowNull: false,
+    },
+    isEvilShellCorp: {
+      type: Sequelize.BOOLEAN,
+      allowNull: false,
+      field: 'is_evil_shell_corp'
+    }
+  }, {
+    timestamps: false,
+    freezeTableName: true // Model tableName will be the same as the model name
+  });
+}
+
