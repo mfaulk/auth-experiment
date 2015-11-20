@@ -147,7 +147,7 @@ describe('router GET /api/user?limit=3', function () {
       method: 'GET',
       url: '/api/user',
       params: {},
-      query: {limit:3}
+      query: {limit: 3}
     });
     var callback = function (obj) {
       // limit should not affect the total count.
@@ -232,7 +232,10 @@ describe('router POST /api/user', function () {
       assert.equal(data.firstName, 'Calvin');
       assert.equal(data.lastName, 'Broadus');
       assert.equal(obj.status, 'success');
-      done();
+      sequelize.models.User.count().then(function (c) {
+        assert.equal(c, 6);
+        done();
+      });
     };
 
     router.handleRequest(request, callback);
@@ -308,7 +311,7 @@ describe('router DELETE /api/user/2', function () {
       var user = obj.data;
       assert.equal(obj.status, 'success');
 
-      sequelize.models.User.count().then(function(c){
+      sequelize.models.User.count().then(function (c) {
         assert.equal(c, 4);
         done();
       });
@@ -327,7 +330,7 @@ describe('router DELETE /api/user/2', function () {
 //    });
 //
 //    var callback = function (obj) {
-//      //console.log(obj);
+//      //.log(obj);
 //      var data = obj.data;
 //      var status = obj.status;
 //
