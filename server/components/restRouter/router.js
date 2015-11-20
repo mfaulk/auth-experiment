@@ -185,6 +185,7 @@ Router.prototype.handleRequest = function (req, callback) {
 };
 
 Router.prototype.handleError = function (msg, callback) {
+  // TODO: this should return meaningful HTTP error codes.
   callback({
     status: 'error',
     message: msg
@@ -202,7 +203,7 @@ Router.prototype.handleSuccess = function (data, optionsOrCallback, callback) {
       status: 'success',
       count: data.count,
       data: _.map(data.rows, function (row) {
-        return JSON.stringify(row);
+        return row.toJSON();
       })
     }, optionsOrCallback);
   } else {
@@ -327,6 +328,7 @@ var handleResourceIndex = function (modelName, query, callback) {
   if (!!query) {
     var queryStringify = JSON.stringify(query);
     var jsonQuery = JSON.parse(queryStringify);
+    console.log(jsonQuery);
 
     var sort = '';
     var limit = '';
@@ -412,6 +414,7 @@ var handleResourceIndex = function (modelName, query, callback) {
   model.findAndCountAll(where).then(function (items) {
     that.handleSuccess(items, callback);
   }).error(function (err) {
+    // TODO: return meaningful http status code.
     that.handleError(err, callback);
   });
 };
@@ -436,6 +439,41 @@ var handleResourceDescribe = function (modelName, callback) {
   }
 };
 
+// TODO: handleResourceCreate
+/**
+ * Handle POST /api/model
+ * @param modelName
+ * @param attributes
+ * @param callback
+ */
+var handleResourceCreate = function(modelName, attributes, callback) {
+  console.log('modelName: ', modelName);
+  console.log('attributes: ', attributes);
+
+  var model = getModel(modelName, this.db);
+
+  // should return 201(Created), 404(Not Found), 409(Conflict)
+
+  if (model) {
+    var that = this;
+    model
+      .create(attributes)
+      .then(function(entry) {
+        if (!entry){
+          console.log('no entry?');
+          that.handleSuccess({}, callback)
+        }else{
+          that.handleSuccess(entry.dataValues, callback)
+        }
+      })
+      .error(function(err) {
+        that.handleError(err, callback)
+      })
+  } else {
+    this.handleError("Unknown Model: " + modelName, callback)
+  }
+}
+
 /**
  * Handle GET /api/model/id
  * @param modelName
@@ -455,7 +493,7 @@ var handleResourceShow = function (modelName, identifier, callback) {
         that.handleError('Invalid ID', callback);
       }
     }).error(function (err) {
-      that.handleError(err, callback);
+      that.handleError(err,  callback);
     });
   }
 };

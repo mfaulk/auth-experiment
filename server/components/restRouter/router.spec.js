@@ -118,6 +118,8 @@ describe('router GET /api', function () {
   });
 });
 
+// /api/model
+
 describe('router GET /api/user', function () {
   it('should list users.', function (done) {
     var request = httpMocks.createRequest({
@@ -149,6 +151,27 @@ describe('router GET /api/user?limit=3', function () {
       assert.equal(obj.count, 5);
       assert.equal(obj.status, 'success');
       assert.equal(obj.data.length, 3);
+      done();
+    };
+    router.handleRequest(request, callback);
+  });
+});
+
+describe('router GET /api/user where firstname is Patrick', function () {
+  it('should return user 2.', function (done) {
+    var request = httpMocks.createRequest({
+      method: 'GET',
+      url: '/api/user',
+      params: {},
+      query: {firstName: 'Patrick'}
+    });
+    var callback = function (obj) {
+      assert.equal(obj.status, 'success');
+      assert.equal(obj.count, 1);
+      assert.equal(obj.data.length, 1);
+      var user = obj.data[0];
+      assert.equal(user.firstName, 'Patrick');
+      assert.equal(user.lastName, 'Modiano');
       done();
     };
     router.handleRequest(request, callback);
@@ -190,6 +213,33 @@ describe('router HEAD /api/user', function () {
   });
 });
 
+// TODO: POST
+
+describe('router POST /api/user', function () {
+  it('should return created user.', function () {
+    var request = httpMocks.createRequest({
+      method: 'POST',
+      url: '/api/user',
+      body: {
+        firstName: 'Calvin',
+        lastName: 'Broadus'
+      }
+    });
+
+    var callback = function (obj) {
+      var data = obj.data;
+      assert(data.id);
+      assert.equal(data.firstName, 'Calvin');
+      assert.equal(data.lastName, 'Broadus');
+      assert.equal(obj.status, 'success');
+    };
+
+    router.handleRequest(request, callback);
+  });
+});
+
+// /api/model/id
+
 describe('router GET /api/user/2', function () {
   it('should return JSON for user 2', function (done) {
     var request = httpMocks.createRequest({
@@ -226,7 +276,6 @@ describe('router GET /api/user/id with invalid id', function () {
     router.handleRequest(request, callback);
   });
 });
-
 
 
 //

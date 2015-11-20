@@ -62,14 +62,23 @@ module.exports = {
 
 function defineUser(sequelize) {
   return sequelize.define('User', {
+    id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: Sequelize.INTEGER
+      },
     firstName: {
       type: Sequelize.STRING,
-      field: 'first_name' // Will result in an attribute that is firstName when user facing but first_name in the database
+      allowNull: false
+      //field: 'first_name' // Will result in an attribute that is firstName when user facing but first_name in the database
     },
     lastName: {
-      type: Sequelize.STRING
+      type: Sequelize.STRING,
+      allowNull: false
     }
   }, {
+    timestamps: false,
     freezeTableName: true // Model tableName will be the same as the model name
   });
 }
