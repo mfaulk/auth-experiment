@@ -1,14 +1,17 @@
 'use strict';
 
 /**
- * Derived from https://github.com/pjanaya/sequelize-restful-extended/blob/master/lib/router.js
+ * Derived from https://github.com/pjanaya/sequelize-restful-extended/blob/master/lib/router.js, and modified for use
+ * with sequelize ^3.13.0
  */
 
 var _ = require('lodash');
 var querystring = require('querystring');
+var url = require('url');
 
-var Router = module.exports = function (sequelize, options) {
-  this.sequelize = sequelize;
+var Router = module.exports = function (db, options) {
+  this.db = db;
+  this.sequelize = db.sequelize;
   this.options = _.extend({
     endpoint: '/api',
     logLevel: 'info',
@@ -51,9 +54,15 @@ Router.prototype.splitPath = function (path) {
 
 Router.prototype.handleRequest = function (req, callback) {
 
+  if (!this.isRestfulRequest(req.path)) {
+    this.handleError('Route does not belong to this API.', callback);
+    return;
+  }
+
   var match = this.splitPath(req.path);
   var modelName = match[0];
   var identifier = match[1];
+  // If present, identifier and associatedIdentifier must be numbers.
   var associatedModelName = match[2];
   var associatedIdentifier = match[3];
 
@@ -68,10 +77,10 @@ Router.prototype.handleRequest = function (req, callback) {
       }
       break;
 
-    case 1: // requested path: /api/model_name
-
-      //modelName = match[0];
-
+    /*
+     * requested path: /api/model_name
+     */
+    case 1:
       if (this.isAllowed(modelName)) {
         switch (req.method) {
           case 'GET':
@@ -92,11 +101,11 @@ Router.prototype.handleRequest = function (req, callback) {
       }
 
       break;
-    case 2: // requested path: /api/model_name/1
 
-      //modelName = match[0];
-      //identifier = match[1];
-      // identifier must be a number
+    /*
+     *requested path: /api/model_name/1
+     */
+    case 2:
       if (isNaN(parseInt(identifier)) || !this.isAllowed(modelName)) {
         this.handleError('Route does not match known patterns.', callback)
       } else {
@@ -118,12 +127,11 @@ Router.prototype.handleRequest = function (req, callback) {
       }
 
       break;
-    case 3: // requested path: /api/model_name/1/associated_model_name
 
-      //modelName = match[0];
-      //identifier = match[1];
-      //associatedModelName = match[2];
-      // identifier must be a number
+    /*
+     * requested path: /api/model_name/1/associated_model_name
+     */
+    case 3: //
       if (isNaN(parseInt(identifier)) || !this.isAllowed(modelName) || !this.isAllowed(associatedModelName)) {
         this.handleError('Route does not match known patterns.', callback)
       } else {
@@ -151,17 +159,14 @@ Router.prototype.handleRequest = function (req, callback) {
       }
 
       break;
-    case 4: // requested path: /api/dao_factory/1/associated_dao_factory/1
 
-      //var modelName = match[0]
-      //var identifier = match[1]
-      //var associatedModelName = match[2]
-      //var associatedIdentifier = match[3]
-      // identifier and associatedIdentifier must be numbers
+    /*
+     * requested path: /api/dao_factory/1/associated_dao_factory/1
+     */
+    case 4:
       if (isNaN(parseInt(identifier)) || isNaN(parseInt(associatedIdentifier)) || !this.isAllowed(modelName) || !this.isAllowed(associatedModelName)) {
         this.handleError('Route does not match known patterns.', callback);
       } else {
-
         switch (req.method) {
           case 'DELETE':
             handleResourceDeleteAssociation.call(this, modelName, identifier, associatedModelName, associatedIdentifier, callback);
@@ -171,7 +176,6 @@ Router.prototype.handleRequest = function (req, callback) {
             this.handleError('Method not available for this pattern.', callback);
             break;
         }
-
       }
       break;
     default:
@@ -188,7 +192,6 @@ Router.prototype.handleError = function (msg, callback) {
 };
 
 Router.prototype.handleSuccess = function (data, optionsOrCallback, callback) {
-  //console.log('router:handleSuccess');
   if (typeof optionsOrCallback === 'function') {
     callback = optionsOrCallback;
     optionsOrCallback = {};
@@ -198,56 +201,67 @@ Router.prototype.handleSuccess = function (data, optionsOrCallback, callback) {
     callback({
       status: 'success',
       count: data.count,
-      data: data.rows
-    }, optionsOrCallback)
+      data: _.map(data.rows, function (row) {
+        return JSON.stringify(row);
+      })
+    }, optionsOrCallback);
   } else {
     callback({
       status: 'success',
       data: data
-    }, optionsOrCallback)
+    }, optionsOrCallback);
   }
 };
 
-Router.prototype.findDAOFactory = function (modelName) {
-  return this.sequelize.daoFactoryManager.getDAO(modelName, {attribute: 'tableName'});
-};
+//Router.prototype.findAssociation = function (daoFactory, associatedModelName) {
+//  for (var key in  daoFactory.associations) {
+//    var hasAssociationAccessor = (daoFactory.associations[key].associationAccessor === associatedModelName);
+//    var hasTargetTableName = (daoFactory.associations[key].target.tableName === associatedModelName);
+//
+//    if (hasAssociationAccessor || hasTargetTableName) {
+//      return daoFactory.associations[key];
+//    }
+//  }
+//  return null;
+//};
+//
+//Router.prototype.findSingleAssociatedModel = function (modelName, identifier, associatedModelName, callback) {
+//  var daoFactory = this.findDAOFactory(modelName);
+//  var association = !!daoFactory ? this.findAssociation(daoFactory, associatedModelName) : null;
+//
+//  if (association.associationType !== 'BelongsTo') {
+//    association = null;
+//  }
+//
+//  if (!!association) {
+//    daoFactory.find(identifier).done(function (err, dao) {
+//      if (err) {
+//        callback(err, null);
+//      } else {
+//        dao[association.accessors.get]().success(function (associatedModel) {
+//          callback(null, associatedModel);
+//        })
+//      }
+//    })
+//  } else {
+//    callback(new Error('Unable to find ' + modelName + ' with identifier ' + identifier), null);
+//  }
+//};
 
-Router.prototype.findAssociation = function (daoFactory, associatedModelName) {
-  for (var key in  daoFactory.associations) {
-    var hasAssociationAccessor = (daoFactory.associations[key].associationAccessor === associatedModelName);
-    var hasTargetTableName = (daoFactory.associations[key].target.tableName === associatedModelName);
-
-    if (hasAssociationAccessor || hasTargetTableName) {
-      return daoFactory.associations[key];
-    }
-  }
-  return null;
-};
-
-Router.prototype.findSingleAssociatedModel = function (modelName, identifier, associatedModelName, callback) {
-  var daoFactory = this.findDAOFactory(modelName);
-  var association = !!daoFactory ? this.findAssociation(daoFactory, associatedModelName) : null;
-
-  if (association.associationType !== 'BelongsTo') {
-    association = null;
-  }
-
-  if (!!association) {
-    daoFactory.find(identifier).done(function (err, dao) {
-      if (err) {
-        callback(err, null);
-      } else {
-        dao[association.accessors.get]().success(function (associatedModel) {
-          callback(null, associatedModel);
-        })
-      }
-    })
-  } else {
-    callback(new Error('Unable to find ' + modelName + ' with identifier ' + identifier), null);
-  }
-};
-
+/**
+ *
+ * @param modelName
+ * @returns {boolean}
+ */
 Router.prototype.isAllowed = function (modelName) {
+  // check if modelName is an actual model
+  var modelExists = _.includes(_.keys(this.db.sequelize.models).map(function (val) {
+    return val.toLowerCase();
+  }), modelName.toLowerCase());
+  if (!modelExists) {
+    return false;
+  }
+
   if (this.options.allowed.length > 0) {
     return (this.options.allowed.indexOf(modelName) !== -1);
   } else {
@@ -255,31 +269,193 @@ Router.prototype.isAllowed = function (modelName) {
   }
 };
 
+/**
+ *
+ */
+var getModel = function (modelName, db) {
+  //console.log(db.models);
+  //Object.keys(db.models).forEach(function (name) {
+  //  if(modelName.toUpperCase() === name.toUpperCase()) {
+  //    return db.models[name];
+  //  }
+  //});
+  var modelNames = _.keys(db.sequelize.models);
+  for (var i = 0; i < modelNames.length; i++) {
+    if (modelNames[i].toLowerCase() === modelName.toLowerCase()) {
+      return db.sequelize.models[modelNames[i]];
+    }
+  }
+  return new Error();
+};
+
+/**
+ * Handle GET /api
+ * @param callback
+ */
 var handleIndex = function (callback) {
-  //console.log('router:handleIndex');
-
   var modelNames = [];
-
-  for(var property in this.sequelize.models) {
-    if(this.sequelize.models.hasOwnProperty(property)) {}
+  for (var property in this.sequelize.models) {
+    if (this.sequelize.models.hasOwnProperty(property)) {
+    }
     modelNames.push(property);
   }
-
-  //var daos = this.sequelize.daoFactoryManager.daos;
-
   var result = modelNames.map(function (modelName) {
     return {
       name: modelName
     }
   });
-
   if (this.options.allowed.length > 0) {
     var allowed = this.options.allowed;
     result = result.filter(function (element) {
       return (allowed.indexOf(element.tableName) !== -1)
     });
   }
-
   this.handleSuccess(result, callback);
 };
 
+
+/**
+ * Handle HTTP GET /api/model
+ * @param modelName
+ * @param query
+ * @param callback
+ */
+var handleResourceIndex = function (modelName, query, callback) {
+  console.log('router:handleResourceIndex:', modelName);
+
+  /////////////// ADDITIONAL QUERY PARAMETERS ///////////////////////
+  if (!!query) {
+    var queryStringify = JSON.stringify(query);
+    var jsonQuery = JSON.parse(queryStringify);
+
+    var sort = '';
+    var limit = '';
+    var offset = '';
+
+    if (!!jsonQuery.sort) { // Sorting
+      sort = jsonQuery.sort;
+      if (sort[0] == "-") {
+        sort = sort.substr(1);
+        sort = sort + " DESC";
+      }
+      delete jsonQuery["sort"];
+    }
+
+    if (!!jsonQuery.limit) { // Limiting
+      limit = jsonQuery.limit;
+      delete jsonQuery["limit"];
+    }
+
+    if (!!jsonQuery.offset) { // Offset
+      offset = jsonQuery.offset;
+      delete jsonQuery["offset"];
+    }
+
+    var ranges = [];
+    var likeFields = [];
+
+    for (var key in jsonQuery) { //loop through the keys
+      if (key.indexOf("_start") > -1) {
+        var fieldName = key.split("_start")[0];
+        if (!!jsonQuery[fieldName + "_end"]) {
+          ranges.push({
+            field_name: fieldName,
+            start_field_name: key,
+            start_field_value: jsonQuery[key],
+            end_field_name: fieldName + "_end",
+            end_field_value: jsonQuery[fieldName + "_end"]
+          });
+        }
+      } else {
+        if (key.indexOf("_like") > -1) {
+          var fieldName = key.split("_like")[0];
+          likeFields.push({
+            field_name: fieldName,
+            field_value: jsonQuery[key]
+          });
+        }
+      }
+    }
+
+    if (likeFields.length > 0) {
+      for (var i = 0; i < likeFields.length; i++) {
+        delete jsonQuery[likeFields[i].field_name + '_like'];
+        jsonQuery[likeFields[i].field_name] = {
+          like: '%' + likeFields[i].field_value + '%'
+        };
+      }
+    }
+
+    if (ranges.length > 0) {
+      for (var i = 0; i < ranges.length; i++) {
+        var range = ranges[i];
+
+        delete jsonQuery[range.start_field_name];
+        delete jsonQuery[range.end_field_name];
+
+        var fieldName = range.field_name;
+        var startValue = range.start_field_value;
+        var endValue = range.end_field_value;
+
+        jsonQuery[fieldName] = {
+          gt: startValue,
+          lt: endValue
+        };
+      }
+    }
+  }
+  /////////////// ADDITIONAL QUERY PARAMETERS ///////////////////////
+
+  var where = (!!query) ? {where: jsonQuery, order: sort, limit: limit, offset: offset} : {};
+  var model = getModel(modelName, this.db);
+  var that = this;
+  model.findAndCountAll(where).then(function (items) {
+    that.handleSuccess(items, callback);
+  }).error(function (err) {
+    that.handleError(err, callback);
+  });
+};
+
+/**
+ * Handle HEAD /api/model
+ */
+var handleResourceDescribe = function (modelName, callback) {
+  // TODO: what should this return?
+  var model = getModel(modelName, this.db);
+
+  if (model) {
+    this.handleSuccess({
+      name: modelName,
+      tableName: 'tableNameGoHere',
+      attributes: 'rawAttributesGoHere'
+    }, {
+      viaHeaders: true
+    }, callback);
+  } else {
+    this.handleError("Unknown Model: " + modelName, callback);
+  }
+};
+
+/**
+ * Handle GET /api/model/id
+ * @param modelName
+ * @param identifier - integer id
+ * @param callback
+ */
+var handleResourceShow = function (modelName, identifier, callback) {
+  var model = getModel(modelName, this.db);
+  var that = this;
+  if (!model) {
+    this.handleError("Unknown Model: " + modelName, callback)
+  } else {
+    model.find({where: {id: identifier}}).then(function (item) {
+      if(!!item) {
+        that.handleSuccess(item.dataValues, callback);
+      } else {
+        that.handleError('Invalid ID', callback);
+      }
+    }).error(function (err) {
+      that.handleError(err, callback);
+    });
+  }
+};

@@ -11,7 +11,7 @@
   "test": {
     "username": "mfaulk",
     "password": null,
-    "database": "database_test",
+    "database": "database_development",
     "dialect": "postgres",
     "protocol": "postgres",
     "host": "127.0.0.1",

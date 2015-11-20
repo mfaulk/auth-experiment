@@ -36,19 +36,23 @@ var authorizer = require('express-authorize');
 // Initialize authorizer with default options
 authorizer.options = {
   /*
-  withSubject     : withSubject,
-  withPermissions : withPermissions,
-  onDenied        : onDenied
-  */
+   withSubject     : withSubject,
+   withPermissions : withPermissions,
+   onDenied        : onDenied
+   */
 };
 
 // routes =====================================================================
 require('./routes')(app, passport, authorizer, permittivity);
 
 // launch =====================================================================
-server.listen(config.port, config.ip, function () {
-  console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+
+db.sequelize.sync().then(function () {
+  server.listen(config.port, config.ip, function () {
+    console.log('Express server listening on %d, in %s mode', config.port, app.get('env'));
+  });
 });
+
 
 // Expose app
 module.exports = {

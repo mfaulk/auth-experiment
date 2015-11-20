@@ -20,6 +20,7 @@
     "passport-local": "^1.0.0",
     "pg": "^4.4.3",
     "pg-hstore": "^2.3.2",
+    "q": "^1.4.1",
     "query-string": "^3.0.0",
     "sequelize": "^3.13.0",
     "sequelize-cli": "^2.1.0",
@@ -80,6 +81,7 @@
     "open": "~0.0.4",
     "requirejs": "~2.1.11",
     "should": "~3.3.1",
+    "sqlite3": "^3.1.1",
     "supertest": "~0.11.0",
     "time-grunt": "~0.3.1"
   },
