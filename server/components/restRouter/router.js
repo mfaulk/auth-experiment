@@ -10,10 +10,10 @@ var querystring = require('querystring');
 var url = require('url');
 
 // Sequelize association types
-var BELONGS_TO = 'BelongsTo';
-var BELONGS_TO_MANY = 'BelongsToMany';
-var HAS_MANY = 'HasMany';
-var HAS_ONE = 'HasOne';
+//var BELONGS_TO = 'BelongsTo';
+//var BELONGS_TO_MANY = 'BelongsToMany';
+//var HAS_MANY = 'HasMany';
+//var HAS_ONE = 'HasOne';
 
 var Router = module.exports = function (db, options) {
   this.db = db;
@@ -31,7 +31,7 @@ Router.prototype.isRestfulRequest = function (path) {
 };
 
 /**
- * Splits an API
+ * Splits an API path
  * @param path - of form /api/dao_factory/1/associated_dao_factory/1, with optional parameters
  * @returns {Array}
  *
@@ -50,10 +50,10 @@ Router.prototype.splitPath = function (path) {
 
   for (var i = 1; i < match.length; i++) {
     if (typeof match[i] !== 'undefined') {
-      rest_params.push(match[i])
+      rest_params.push(match[i]);
     }
   }
-  return rest_params
+  return rest_params;
 };
 
 Router.prototype.handleRequest = function (req, callback) {
@@ -239,6 +239,9 @@ Router.prototype.isAllowed = function (modelName) {
     return true;
   }
 };
+
+
+
 
 /**
  *
@@ -554,21 +557,21 @@ var handleResourceDelete = function (modelName, identifier, callback) {
 /**
  * handle GET /api/model/id/associatedModel
  * @param modelName
- * @param identifier
+ * @param id
  * @param associatedModelName
  * @param callback
  */
-var handleResourceIndexAssociation = function (modelName, identifier, associatedModelName, callback) {
+var handleResourceIndexAssociation = function (modelName, id, associatedModelName, callback) {
   var model = getModel(modelName, this.db);
   var associatedModel = getAssociation(model, associatedModelName);
-  var associatedAccessor = associatedModel.accessors['get'];
+  var associatedAccessor = associatedModel.accessors.get;
 
   var that = this;
   if (!model) {
     that.handleError("Unknown Model: " + modelName, callback)
   } else {
     model
-      .findById(identifier)
+      .findById(id)
       .then(function (entry) {
         entry[associatedAccessor]().then(function (assoc) {
           that.handleSuccess(assoc.dataValues, callback);
@@ -581,3 +584,31 @@ var handleResourceIndexAssociation = function (modelName, identifier, associated
       });
   }
 };
+
+/**
+ * handle GET /api/model/id/associatedModel/associatedModellId
+ * @param modelName
+ * @param id
+ * @param associatedModelName
+ * @param callback
+ */
+var handleSingleAssociatedModel = function(modelName, id, associatedModelName, associatedId, callback) {
+
+  if (association.associationType !== 'BelongsTo') {
+    association = null
+  }
+
+  if (!!association) {
+    daoFactory.find(identifier).done(function(err, dao) {
+      if (err) {
+        callback(err, null)
+      } else {
+        dao[association.accessors.get]().success(function(associatedModel) {
+          callback(null, associatedModel)
+        })
+      }
+    })
+  } else {
+    callback(new Error('Unable to find ' + modelName + ' with identifier ' + identifier), null)
+  }
+}
